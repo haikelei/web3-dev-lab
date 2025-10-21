@@ -23,7 +23,7 @@ export default async function RootLayout({ children }) {
           navbar={
             <Navbar 
               logo={<b>🌐 Web3 Dev Lab</b>}
-              projectLink="https://github.com/your-repo/web3-dev-lab"
+              projectLink="https://github.com/haikelei/web3-dev-lab"
             />
           }
           footer={
@@ -39,7 +39,7 @@ export default async function RootLayout({ children }) {
               errorText="搜索出错"
             />
           }
-          docsRepositoryBase="https://github.com/your-repo/web3-dev-lab/blob/main"
+          docsRepositoryBase="https://github.com/haikelei/web3-dev-lab/blob/main"
           editLink="在 GitHub 上编辑此页"
           feedback={{
             content: '有问题？给我们反馈 →',
