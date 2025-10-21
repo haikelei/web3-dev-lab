@@ -1,0 +1,15 @@
+node_modules
+.next
+dist
+.env.local
+.env.*.local
+.DS_Store
+*.log
+*.lock
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Pagefind 搜索索引（构建时生成）
+_pagefind/
+public/_pagefind/

@@ -1,0 +1,111 @@
+# 项目1：多链钱包 + 账户抽象(ERC-4337)
+
+## 项目概述
+
+这是Web3 Dev Lab的第一个项目，专注于**密钥管理**、**交易签名**和**账户抽象(ERC-4337)**的完整实现。
+
+### 目标
+
+完成本项目后，你将能够：
+
+✅ 理解密钥对的生成、存储和加密
+✅ 掌握ECDSA签名和EIP-712签名机制
+✅ 实现完整的钱包逻辑（生成、导入、交易）
+✅ 理解UserOperation和Bundler的工作原理
+✅ 实现白名单Paymaster进行Gas赞助
+✅ 构建支持多链的钱包系统
+
+### 核心要素
+
+| 主题 | 内容 |
+|------|------|
+| 🔑 **密钥管理** | 生成、存储、加密、导入 |
+| ✍️ **签名机制** | ECDSA、EIP-191、EIP-712 |
+| 📡 **RPC交互** | 多链RPC管理、交易发送 |
+| 🔐 **ERC-4337** | UserOp、Bundler、Paymaster |
+| 🌍 **多链支持** | Ethereum、Polygon、Arbitrum等 |
+
+### 项目时长
+
+⏱️ **3周** (可根据你的进度调整)
+
+### 技术栈
+
+- **后端**：Go + Geth库
+- **合约**：Solidity (SimpleAccount + Paymaster)
+- **前端**：Next.js + Wagmi (可选)
+- **测试**：Foundry + Go测试
+- **部署**：Docker + Makefile
+
+### 成果物
+
+完成此项目，你将拥有：
+
+- 📝 完整的架构文档和设计图
+- 🔧 可运行的Go钱包实现
+- 📋 Solidity合约(SimpleAccount、Paymaster)
+- 🧪 完善的测试套件(单测+集成测试)
+- 📊 本地Prometheus+Grafana监控
+- ✅ Docker一键启动环境
+- 📹 30-60秒演示视频
+
+---
+
+## 学习路径
+
+### 快速开始 (10分钟)
+
+1. [环境搭建](/projects/01-multi-chain-wallet/setup)
+2. 一键启动本地环境
+3. 运行演示脚本
+
+### 核心概念 (深入理解)
+
+按顺序学习：
+
+1. [密钥管理](/projects/01-multi-chain-wallet/core-concepts/keypair)
+2. [签名机制](/projects/01-multi-chain-wallet/core-concepts/signing)
+3. [RPC与交易](/projects/01-multi-chain-wallet/core-concepts/rpc)
+4. [账户抽象(ERC-4337)](/projects/01-multi-chain-wallet/core-concepts/aa-erc4337)
+
+### 详细教程 (手把手实现)
+
+按步骤实现：
+
+1. [01. 环境搭建](/projects/01-multi-chain-wallet/guide/01-setup)
+2. [02. 生成密钥](/projects/01-multi-chain-wallet/guide/02-generate-keys)
+3. [03. 发送交易](/projects/01-multi-chain-wallet/guide/03-send-tx)
+4. [04. ERC20转账](/projects/01-multi-chain-wallet/guide/04-erc20-transfer)
+5. [05. UserOperation](/projects/01-multi-chain-wallet/guide/05-user-operation)
+6. [06. Paymaster集成](/projects/01-multi-chain-wallet/guide/06-paymaster)
+7. [07. 完整演示](/projects/01-multi-chain-wallet/guide/07-demo)
+
+### 代码示例
+
+- [Go示例](/projects/01-multi-chain-wallet/code-samples/go-examples)
+- [Solidity示例](/projects/01-multi-chain-wallet/code-samples/solidity-examples)
+
+---
+
+## 常见问题
+
+**Q: 需要之前的Go/Solidity经验吗？**
+A: 推荐有基础，但我们会详细讲解重点部分。
+
+**Q: ERC-4337是什么，为什么要学？**
+A: 这是账户抽象的标准，是Web3 UX升级的关键。
+
+**Q: Paymaster用来干什么？**
+A: 可以代替用户支付Gas费，实现更好的用户体验。
+
+[→ 查看所有FAQ](/projects/01-multi-chain-wallet/troubleshooting)
+
+---
+
+## 接下来
+
+完成本项目后，你可以：
+
+- 👉 [进入项目2：AMM DEX](/projects/02-amm-dex)
+- 📖 [查看更多学习资源](/learning)
+- 🔗 [返回所有项目](/projects)
