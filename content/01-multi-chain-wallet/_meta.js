@@ -1,7 +1,7 @@
 export default {
-  index: '项目概述',
-  overview: '项目简介',
+  index: '项目介绍',
   architecture: '架构设计',
+  'core-flows': '核心流程',
   setup: '快速搭建',
   'core-concepts': '核心概念',
   guide: '详细教程',
