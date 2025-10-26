@@ -1,0 +1,150 @@
+# 3. 创建账户流程
+
+这个流程展示了用户如何为钱包创建新的区块链账户，包括地址派生、后端存储和UI更新。
+
+## 时序图
+
+```mermaid
+%%{init: {'theme':'dark', 'themeVariables': {'primaryColor':'#1f2937', 'primaryTextColor':'#e5e7eb', 'primaryBorderColor':'#4b5563', 'lineColor':'#6b7280', 'textColor':'#e5e7eb', 'noteBkgColor':'#374151', 'noteTextColor':'#e5e7eb'}}}%%
+sequenceDiagram
+    participant U as 用户
+    participant F as 前端(React)
+    participant I as IndexedDB
+    participant B as 后端(Go)
+    participant D as 数据库(MySQL)
+    participant R as 区块链RPC
+
+    U->>F: 1. 选择链并创建账户
+    F->>I: 2. 读取钱包助记词
+    F->>F: 3. 使用BIP44派生地址
+    F->>F: 4. 验证地址格式
+    F->>B: 5. 调用API创建账户元数据
+    B->>D: 6. 存储账户信息
+    D-->>B: 7. 返回账户ID
+    B-->>F: 8. 返回账户元数据
+    F->>R: 9. 查询账户余额(可选)
+    R-->>F: 10. 返回余额
+    F->>F: 11. 更新UI显示账户
+    F-->>U: 12. 显示账户创建成功
+```
+
+## 详细步骤说明
+
+### 步骤1：用户选择链
+- **选择区块链**：用户从支持的链列表中选择一个链
+- **创建新账户**：点击"创建账户"按钮
+- **账户名称**：可选，为账户设置自定义名称
+
+### 步骤2-4：前端派生地址
+- **读取助记词**：从IndexedDB读取加密的助记词
+- **BIP44派生**：使用BIP44标准派生指定链的地址
+- **路径格式**：`m/44'/60'/0'/0/0`（以太坊主路径）
+- **地址验证**：验证派生出的地址格式是否正确
+
+### 步骤5-8：后端存储账户
+- **API调用**：前端调用后端API创建账户元数据
+- **参数传递**：钱包ID、链ID、地址、账户索引
+- **数据存储**：后端将账户信息存储到MySQL
+- **返回数据**：后端返回完整的账户信息
+
+### 步骤9-10：查询初始余额（可选）
+- **RPC调用**：前端查询账户初始余额
+- **状态确认**：确认账户已正确创建并可以查询
+
+### 步骤11-12：更新UI
+- **账户列表**：将新账户添加到钱包账户列表
+- **余额显示**：显示账户余额
+- **状态反馈**：提示用户账户创建成功
+
+## 技术实现
+
+### BIP44地址派生
+
+```typescript
+// 使用BIP44派生地址
+import { ethers } from 'ethers';
+import { HDNodeWallet, Mnemonic } from 'ethers';
+
+// 从助记词创建HD钱包
+const mnemonic = Mnemonic.fromPhrase(userMnemonic);
+const hdNode = HDNodeWallet.fromPhrase(mnemonic.phrase);
+
+// 定义链的派生路径
+const chainPaths = {
+  1: "m/44'/60'/0'/0/0",      // Ethereum
+  137: "m/44'/60'/0'/0/1",     // Polygon
+  42161: "m/44'/60'/0'/0/2",   // Arbitrum
+  10: "m/44'/60'/0'/0/3",      // Optimism
+};
+
+// 派生指定链的地址
+function deriveAddress(chainId: number, accountIndex: number): string {
+  const path = `m/44'/60'/${accountIndex}'/0/0`;
+  const wallet = hdNode.derivePath(path);
+  return wallet.address;
+}
+```
+
+### 后端账户创建API
+
+```go
+// CreateAccountRequest 创建账户请求
+type CreateAccountRequest struct {
+    WalletID string `json:"wallet_id" binding:"required"`
+    ChainID  int64  `json:"chain_id" binding:"required"`
+    Address  string `json:"address" binding:"required"`
+    Index    int    `json:"index"`
+}
+
+// CreateAccount 创建账户
+func (h *AccountHandler) CreateAccount(c *gin.Context) {
+    var req CreateAccountRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        utils.BadRequest(c, err.Error())
+        return
+    }
+
+    account, err := h.accountService.CreateAccount(
+        req.WalletID,
+        req.ChainID,
+        req.Address,
+        req.Index,
+    )
+    
+    if err != nil {
+        utils.InternalError(c, "Failed to create account")
+        return
+    }
+
+    utils.Success(c, account)
+}
+```
+
+## 关键设计点
+
+### 多链支持
+- **统一标准**：所有链使用BIP44标准派生地址
+- **路径管理**：为每条链分配不同的派生路径
+- **地址兼容**：不同链使用相同私钥派生不同地址
+
+### 账户管理
+- **账户索引**：每个账户有唯一的索引号
+- **元数据存储**：后端只存储账户元数据
+- **本地加密**：助记词在本地加密存储
+
+### 用户体验
+- **即时反馈**：创建后立即显示账户
+- **余额查询**：自动查询并显示初始余额
+- **错误处理**：清晰的错误提示和恢复建议
+
+## 相关代码
+
+### 前端关键文件
+- `src/services/AddressService.ts` - 地址派生服务
+- `src/store/accountSlice.ts` - 账户状态管理
+- `src/utils/bip44.ts` - BIP44实现
+
+### 后端关键文件
+- `internal/handlers/account.go` - 账户API处理
+- `pkg/account/account.go` - 账户业务逻辑
+- `pkg/storage/mysql.go` - 数据存储

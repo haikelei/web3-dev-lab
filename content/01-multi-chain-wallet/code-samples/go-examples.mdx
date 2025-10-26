@@ -1,21 +1,172 @@
 # Go示例代码
 
-Go实现示例待填充...
+这里展示了钱包后端服务的核心Go实现代码。
 
-## 密钥生成示例
+## 钱包创建和导入
+
+### 钱包服务接口
 
 ```go
-// TODO: 添加密钥生成代码
+// WalletService 钱包服务接口
+type WalletService interface {
+    // 钱包元数据管理
+    CreateWallet(name string, walletType string, mnemonicHash string) (*types.Wallet, error)
+    GetWallet(walletID string) (*types.Wallet, error)
+    GetAllWallets() ([]*types.Wallet, error)
+    DeleteWallet(walletID string) error
+
+    // 账户元数据管理
+    CreateAccount(walletID string, chainID int64, address string, index int) (*types.Account, error)
+    GetAccount(accountID string) (*types.Account, error)
+    GetAccountsByWallet(walletID string) ([]*types.Account, error)
+    GetAccountsByChain(chainID int64) ([]*types.Account, error)
+}
 ```
 
-## 签名示例
+### 钱包创建实现
 
 ```go
-// TODO: 添加签名代码
+// CreateWallet 创建钱包（只存储元数据）
+func (s *walletService) CreateWallet(name string, walletType string, mnemonicHash string) (*types.Wallet, error) {
+    // 验证钱包类型
+    if walletType != string(types.WalletTypeMnemonic) && walletType != string(types.WalletTypePrivateKey) {
+        return nil, types.NewAppError(types.ErrCodeInvalidMnemonic, "Invalid wallet type", nil)
+    }
+
+    // 创建钱包对象
+    wallet := &types.Wallet{
+        ID:           uuid.New().String(),
+        Name:         name,
+        Type:         types.WalletType(walletType),
+        MnemonicHash: mnemonicHash,
+        CreatedAt:    time.Now(),
+        UpdatedAt:    time.Now(),
+    }
+
+    // 保存到数据库
+    if err := s.storage.SaveWallet(wallet); err != nil {
+        return nil, fmt.Errorf("failed to save wallet: %w", err)
+    }
+
+    return wallet, nil
+}
 ```
 
-## 交易发送示例
+### API处理器
 
 ```go
-// TODO: 添加交易发送代码
+// CreateWalletRequest 创建钱包请求
+type CreateWalletRequest struct {
+    Name         string `json:"name" binding:"required"`
+    Type         string `json:"type" binding:"required,oneof=mnemonic private_key"`
+    MnemonicHash string `json:"mnemonic_hash" binding:"required"`
+}
+
+// CreateWallet 创建钱包API
+func (h *WalletHandler) CreateWallet(c *gin.Context) {
+    var req CreateWalletRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        utils.BadRequest(c, err.Error())
+        return
+    }
+
+    wallet, err := h.walletService.CreateWallet(req.Name, req.Type, req.MnemonicHash)
+    if err != nil {
+        if appErr, ok := err.(*types.AppError); ok {
+            utils.Error(c, http.StatusBadRequest, appErr.Message)
+        } else {
+            utils.InternalError(c, "Failed to create wallet")
+        }
+        return
+    }
+
+    utils.Success(c, wallet)
+}
+```
+
+## 账户管理
+
+### 账户创建
+
+```go
+// CreateAccount 创建账户（前端提供地址）
+func (s *walletService) CreateAccount(walletID string, chainID int64, address string, index int) (*types.Account, error) {
+    // 验证钱包是否存在
+    _, err := s.storage.GetWallet(walletID)
+    if err != nil {
+        return nil, types.NewAppError(types.ErrCodeWalletNotFound, "Wallet not found", err)
+    }
+
+    // 创建账户对象
+    account := &types.Account{
+        ID:        uuid.New().String(),
+        WalletID:  walletID,
+        ChainID:   chainID,
+        Address:   address,
+        Index:     index,
+        Balance:   "0",
+        CreatedAt: time.Now(),
+        UpdatedAt: time.Now(),
+    }
+
+    // 保存到数据库
+    if err := s.storage.SaveAccount(account); err != nil {
+        return nil, fmt.Errorf("failed to save account: %w", err)
+    }
+
+    return account, nil
+}
+```
+
+## 错误处理
+
+### 应用错误类型
+
+```go
+// AppError 应用错误
+type AppError struct {
+    Code    ErrCode `json:"code"`
+    Message string  `json:"message"`
+    Details error   `json:"-"`
+}
+
+// ErrCode 错误代码
+type ErrCode string
+
+const (
+    ErrCodeWalletNotFound    ErrCode = "WALLET_NOT_FOUND"
+    ErrCodeAccountNotFound   ErrCode = "ACCOUNT_NOT_FOUND"
+    ErrCodeInvalidMnemonic   ErrCode = "INVALID_MNEMONIC"
+    ErrCodeInvalidPrivateKey ErrCode = "INVALID_PRIVATE_KEY"
+)
+
+// NewAppError 创建应用错误
+func NewAppError(code ErrCode, message string, details error) *AppError {
+    return &AppError{
+        Code:    code,
+        Message: message,
+        Details: details,
+    }
+}
+```
+
+## 数据存储
+
+### 存储接口
+
+```go
+// Storage 存储接口
+type Storage interface {
+    // 钱包操作
+    SaveWallet(wallet *types.Wallet) error
+    GetWallet(id string) (*types.Wallet, error)
+    GetAllWallets() ([]*types.Wallet, error)
+    DeleteWallet(id string) error
+
+    // 账户操作
+    SaveAccount(account *types.Account) error
+    GetAccount(id string) (*types.Account, error)
+    GetAccountsByWallet(walletID string) ([]*types.Account, error)
+    GetAccountsByChain(chainID int64) ([]*types.Account, error)
+}
 ```
